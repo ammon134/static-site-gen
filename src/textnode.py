@@ -64,6 +64,24 @@ def text_node_to_html_node(text_node: TextNode) -> LeafNode:
     return LeafNode(tag=tag, value=value, props=props)
 
 
+def text_to_textnodes(text: str) -> list[TextNode]:
+    nodes = [TextNode(text, TextType.text_type_text.value)]
+    nodes = split_nodes_delimiter(
+        nodes, DelimiterType.delimiter_type_bold.value, TextType.text_type_bold.value
+    )
+    nodes = split_nodes_delimiter(
+        nodes,
+        DelimiterType.delimiter_type_italic.value,
+        TextType.text_type_italic.value,
+    )
+    nodes = split_nodes_delimiter(
+        nodes, DelimiterType.delimiter_type_code.value, TextType.text_type_code.value
+    )
+    nodes = split_nodes_images(nodes)
+    nodes = split_nodes_links(nodes)
+    return nodes
+
+
 def split_nodes_delimiter(
     nodes: list[TextNode], delimiter: str, text_type: str
 ) -> list[TextNode]:

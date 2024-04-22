@@ -6,6 +6,7 @@ from textnode import (
     split_nodes_delimiter,
     split_nodes_images,
     split_nodes_links,
+    text_to_textnodes,
 )
 
 
@@ -195,6 +196,31 @@ class TestSplitLinks(unittest.TestCase):
                 "https://www.example.com",
             ),
         ]
+        self.assertEqual(new_nodes, target_nodes)
+
+
+class TestTextToTextNode(unittest.TestCase):
+    def test_success(self):
+        new_nodes = text_to_textnodes(
+            "This is **text** with an *italic* word and a `code block` and an ![image](https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png) and a [link](https://boot.dev)"
+        )
+        target_nodes = [
+            TextNode("This is ", TextType.text_type_text.value),
+            TextNode("text", TextType.text_type_bold.value),
+            TextNode(" with an ", TextType.text_type_text.value),
+            TextNode("italic", TextType.text_type_italic.value),
+            TextNode(" word and a ", TextType.text_type_text.value),
+            TextNode("code block", TextType.text_type_code.value),
+            TextNode(" and an ", TextType.text_type_text.value),
+            TextNode(
+                "image",
+                TextType.text_type_image.value,
+                "https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png",
+            ),
+            TextNode(" and a ", TextType.text_type_text.value),
+            TextNode("link", TextType.text_type_link.value, "https://boot.dev"),
+        ]
+
         self.assertEqual(new_nodes, target_nodes)
 
 
