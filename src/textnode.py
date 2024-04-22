@@ -1,4 +1,5 @@
 from enum import Enum
+import re
 
 from htmlnode import LeafNode
 
@@ -70,7 +71,7 @@ def split_nodes_delimiter(
         raise Exception("invalid markdown syntax")
 
     new_nodes = []
-    for i, node in enumerate(nodes):
+    for node in nodes:
         if node.text_type is not TextType.text_type_text.value:
             new_nodes.append(node)
             continue
@@ -81,11 +82,83 @@ def split_nodes_delimiter(
             raise Exception("invalid markdown syntax")
 
         for i, split in enumerate(splits):
-            if i % 2 == 0:
-                temp.append(TextNode(split, TextType.text_type_text.value))
-            else:
+            if i % 2 != 0:
                 temp.append(TextNode(split, text_type))
+            else:
+                temp.append(TextNode(split, TextType.text_type_text.value))
 
         new_nodes.extend(temp)
 
     return new_nodes
+
+
+def split_nodes_images(nodes: list[TextNode]) -> list[TextNode]:
+    new_nodes = []
+    for node in nodes:
+        if node.text_type is not TextType.text_type_text.value:
+            new_nodes.append(node)
+            continue
+
+        image_tuples = extract_markdown_images(node.text)
+        if len(image_tuples) == 0:
+            new_nodes.append(node)
+            continue
+
+        temp = []
+        node_text = node.text
+        for tuple in image_tuples:
+            delimiter = f"![{tuple[0]}]({tuple[1]})"
+            splits = node_text.split(delimiter, 1)
+
+            if splits[0] != "":
+                temp.append(TextNode(splits[0], TextType.text_type_text.value))
+
+            temp.append(TextNode(tuple[0], TextType.text_type_image.value, tuple[1]))
+            node_text = splits[1]
+
+        if node_text != "":
+            temp.append(TextNode(node_text, TextType.text_type_text.value))
+
+        new_nodes.extend(temp)
+
+    return new_nodes
+
+
+def split_nodes_links(nodes: list[TextNode]) -> list[TextNode]:
+    new_nodes = []
+    for node in nodes:
+        if node.text_type is not TextType.text_type_text.value:
+            new_nodes.append(node)
+            continue
+
+        link_tuples = extract_markdown_links(node.text)
+        if len(link_tuples) == 0:
+            new_nodes.append(node)
+            continue
+
+        temp = []
+        node_text = node.text
+        for tuple in link_tuples:
+            delimiter = f"[{tuple[0]}]({tuple[1]})"
+            splits = node_text.split(delimiter, 1)
+
+            if splits[0] != "":
+                temp.append(TextNode(splits[0], TextType.text_type_text.value))
+
+            temp.append(TextNode(tuple[0], TextType.text_type_link.value, tuple[1]))
+            node_text = splits[1]
+
+        if node_text != "":
+            temp.append(TextNode(node_text, TextType.text_type_text.value))
+
+        new_nodes.extend(temp)
+
+    return new_nodes
+
+
+def extract_markdown_images(text: str) -> list[tuple[str, str]]:
+    return re.findall(r"!\[(.*?)\]\((.*?)\)", text)
+
+
+def extract_markdown_links(text: str) -> list[tuple[str, str]]:
+    return re.findall(r"\[(.*?)\]\((.*?)\)", text)

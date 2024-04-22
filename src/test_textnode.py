@@ -1,6 +1,12 @@
 import unittest
 
-from textnode import TextNode, TextType, split_nodes_delimiter
+from textnode import (
+    TextNode,
+    TextType,
+    split_nodes_delimiter,
+    split_nodes_images,
+    split_nodes_links,
+)
 
 
 class TestTextNode(unittest.TestCase):
@@ -94,6 +100,100 @@ class TestSplitInlineMarkdown(unittest.TestCase):
             TextNode("a few", TextType.text_type_bold.value, None),
             TextNode(" words", TextType.text_type_text.value, None),
             node_image,
+        ]
+        self.assertEqual(new_nodes, target_nodes)
+
+
+class TestSplitImages(unittest.TestCase):
+    def test_success(self):
+        node = TextNode(
+            "This is text with an ![image](https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png) and ![another](https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/dfsdkjfd.png) and some more text",
+            TextType.text_type_text.value,
+        )
+        new_nodes = split_nodes_images([node])
+        target_nodes = [
+            TextNode("This is text with an ", TextType.text_type_text.value, None),
+            TextNode(
+                "image",
+                TextType.text_type_image.value,
+                "https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png",
+            ),
+            TextNode(" and ", TextType.text_type_text.value, None),
+            TextNode(
+                "another",
+                TextType.text_type_image.value,
+                "https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/dfsdkjfd.png",
+            ),
+            TextNode(" and some more text", TextType.text_type_text.value, None),
+        ]
+        self.assertEqual(new_nodes, target_nodes)
+
+    def test_duplicate_image(self):
+        node = TextNode(
+            "This is text with an ![image](https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png) and another ![image](https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png) and some more text",
+            TextType.text_type_text.value,
+        )
+        new_nodes = split_nodes_images([node])
+        target_nodes = [
+            TextNode("This is text with an ", TextType.text_type_text.value, None),
+            TextNode(
+                "image",
+                TextType.text_type_image.value,
+                "https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png",
+            ),
+            TextNode(" and another ", TextType.text_type_text.value, None),
+            TextNode(
+                "image",
+                TextType.text_type_image.value,
+                "https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png",
+            ),
+            TextNode(" and some more text", TextType.text_type_text.value, None),
+        ]
+        self.assertEqual(new_nodes, target_nodes)
+
+
+class TestSplitLinks(unittest.TestCase):
+    def test_success(self):
+        node = TextNode(
+            "This is text with a [link](https://www.example.com) and [another](https://www.example.com/another)",
+            TextType.text_type_text.value,
+        )
+        new_nodes = split_nodes_links([node])
+        target_nodes = [
+            TextNode("This is text with a ", TextType.text_type_text.value, None),
+            TextNode(
+                "link",
+                TextType.text_type_link.value,
+                "https://www.example.com",
+            ),
+            TextNode(" and ", TextType.text_type_text.value, None),
+            TextNode(
+                "another",
+                TextType.text_type_link.value,
+                "https://www.example.com/another",
+            ),
+        ]
+        self.assertEqual(new_nodes, target_nodes)
+
+    def test_duplicate_link(self):
+        node = TextNode(
+            "This is text with a [link](https://www.example.com) and another [link](https://www.example.com)",
+            TextType.text_type_text.value,
+        )
+        new_nodes = split_nodes_links([node])
+        target_nodes = [
+            TextNode("This is text with a ", TextType.text_type_text.value, None),
+            TextNode(
+                "link",
+                TextType.text_type_link.value,
+                "https://www.example.com",
+            ),
+            TextNode(" and another ", TextType.text_type_text.value, None),
+            TextNode(
+                "link",
+                TextType.text_type_link.value,
+                "https://www.example.com",
+            ),
         ]
         self.assertEqual(new_nodes, target_nodes)
 
