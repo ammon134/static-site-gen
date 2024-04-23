@@ -78,10 +78,7 @@ def block_to_htmlnode(block: str) -> HTMLNode:
 
 
 def paragraph_to_htmlnode(text: str) -> HTMLNode:
-    text_nodes = text_to_textnodes(text)
-    children_nodes = []
-    for node in text_nodes:
-        children_nodes.append(text_node_to_html_node(node))
+    children_nodes = text_to_children_nodes(text)
 
     return ParentNode("p", children_nodes)
 
@@ -92,10 +89,7 @@ def heading_to_htmlnode(text: str) -> HTMLNode:
         raise Exception("invalid syntax - heading")
 
     text = text.lstrip(match.group(1) + " ")
-    text_nodes = text_to_textnodes(text)
-    children_nodes = []
-    for node in text_nodes:
-        children_nodes.append(text_node_to_html_node(node))
+    children_nodes = text_to_children_nodes(text)
 
     level = str.count(match.group(1), "#")
 
@@ -112,10 +106,8 @@ def code_to_htmlnode(text: str) -> HTMLNode:
     for line in lines:
         text_lines.append(line.strip())
 
-    text_nodes = text_to_textnodes("\n".join(text_lines))
-    children_nodes = []
-    for node in text_nodes:
-        children_nodes.append(text_node_to_html_node(node))
+    text = "\n".join(text_lines)
+    children_nodes = text_to_children_nodes(text)
 
     return ParentNode("pre", [ParentNode("code", children_nodes, None)], None)
 
@@ -126,10 +118,8 @@ def quote_to_htmlnode(text: str) -> HTMLNode:
     for line in lines:
         text_lines.append(line.strip("> "))
 
-    text_nodes = text_to_textnodes("\n".join(text_lines))
-    children_nodes = []
-    for node in text_nodes:
-        children_nodes.append(text_node_to_html_node(node))
+    text = "\n".join(text_lines)
+    children_nodes = text_to_children_nodes(text)
 
     return ParentNode("blockquote", children_nodes, None)
 
@@ -140,12 +130,7 @@ def unordered_list_to_htmlnode(text: str) -> HTMLNode:
     ul_children_nodes = []
     for line in lines:
         line = line.strip("*- ")
-        text_nodes = text_to_textnodes(line)
-
-        li_children_nodes = []
-        for node in text_nodes:
-            li_children_nodes.append(text_node_to_html_node(node))
-
+        li_children_nodes = text_to_children_nodes(line)
         ul_children_nodes.append(ParentNode("li", li_children_nodes))
 
     return ParentNode("ul", ul_children_nodes, None)
@@ -159,12 +144,16 @@ def ordered_list_to_htmlnode(text: str) -> HTMLNode:
         line = line.strip()
         splits = re.split(r"^\d\. ", line, 1)
         line = splits[-1]
-        text_nodes = text_to_textnodes(line)
-
-        li_children_nodes = []
-        for node in text_nodes:
-            li_children_nodes.append(text_node_to_html_node(node))
-
+        li_children_nodes = text_to_children_nodes(line)
         ul_children_nodes.append(ParentNode("li", li_children_nodes))
 
     return ParentNode("ol", ul_children_nodes, None)
+
+
+def text_to_children_nodes(text: str) -> list[HTMLNode]:
+    text_nodes = text_to_textnodes(text)
+    children_nodes = []
+    for node in text_nodes:
+        children_nodes.append(text_node_to_html_node(node))
+
+    return children_nodes
