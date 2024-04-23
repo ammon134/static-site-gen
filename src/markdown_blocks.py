@@ -10,28 +10,29 @@ class BlockType(Enum):
     block_type_heading = "heading"
     block_type_code = "code"
     block_type_quote = "quote"
-    block_type_unordered_list = "unordered_list"
-    block_type_ordered_list = "ordered_list"
+    block_type_u_list = "unordered_list"
+    block_type_o_list = "ordered_list"
 
 
 def block_to_block_type(block: str) -> BlockType:
     lines = block.splitlines()
+
     if len(lines) == 1 and re.match(r"#{1,6} ", lines[0]):
         return BlockType.block_type_heading
-
-    if re.match(r"`{3}.*`{3}", block, re.DOTALL):
-        return BlockType.block_type_code
 
     matches = re.findall(r"([*|\-|>]) ", block, re.MULTILINE)
     if matches:
         symbol = matches[0]
-        for match in matches:
-            if match != symbol:
+        for line in lines:
+            if not line.strip().startswith(symbol):
                 return BlockType.block_type_paragraph
         if symbol == ">":
             return BlockType.block_type_quote
         if symbol == "*" or symbol == "-":
-            return BlockType.block_type_unordered_list
+            return BlockType.block_type_u_list
+
+    if re.match(r"`{3}.*`{3}", block, re.DOTALL):
+        return BlockType.block_type_code
 
     matches = re.findall(r"(\d+)\. ", block, re.MULTILINE)
     if matches:
@@ -43,7 +44,7 @@ def block_to_block_type(block: str) -> BlockType:
                 break
             expected_num += 1
         if is_ordered:
-            return BlockType.block_type_ordered_list
+            return BlockType.block_type_o_list
 
     return BlockType.block_type_paragraph
 
@@ -66,12 +67,18 @@ def block_to_htmlnode(block: str) -> HTMLNode:
         return heading_to_htmlnode(block)
     if block_type == BlockType.block_type_code:
         return code_to_htmlnode(block)
+    if block_type == BlockType.block_type_quote:
+        return quote_to_htmlnode(block)
+    if block_type == BlockType.block_type_u_list:
+        return unordered_list_to_htmlnode(block)
+    if block_type == BlockType.block_type_o_list:
+        return ordered_list_to_htmlnode(block)
 
     return paragraph_to_htmlnode(block)
 
 
-def paragraph_to_htmlnode(paragraph: str) -> HTMLNode:
-    text_nodes = text_to_textnodes(paragraph)
+def paragraph_to_htmlnode(text: str) -> HTMLNode:
+    text_nodes = text_to_textnodes(text)
     children_nodes = []
     for node in text_nodes:
         children_nodes.append(text_node_to_html_node(node))
@@ -79,12 +86,12 @@ def paragraph_to_htmlnode(paragraph: str) -> HTMLNode:
     return ParentNode("p", children_nodes)
 
 
-def heading_to_htmlnode(heading: str) -> HTMLNode:
-    match = re.match(r"(#{1,6}) ", heading)
+def heading_to_htmlnode(text: str) -> HTMLNode:
+    match = re.match(r"(#{1,6}) ", text)
     if not match:
         raise Exception("invalid syntax - heading")
 
-    text = heading.lstrip(match.group(1) + " ")
+    text = text.lstrip(match.group(1) + " ")
     text_nodes = text_to_textnodes(text)
     children_nodes = []
     for node in text_nodes:
@@ -95,8 +102,8 @@ def heading_to_htmlnode(heading: str) -> HTMLNode:
     return ParentNode(f"h{level}", children_nodes, None)
 
 
-def code_to_htmlnode(code: str) -> HTMLNode:
-    lines = code.splitlines()
+def code_to_htmlnode(text: str) -> HTMLNode:
+    lines = text.splitlines()
     if len(lines) < 2:
         raise Exception("invalid syntax - code")
 
@@ -111,3 +118,38 @@ def code_to_htmlnode(code: str) -> HTMLNode:
         children_nodes.append(text_node_to_html_node(node))
 
     return ParentNode("pre", [ParentNode("code", children_nodes, None)], None)
+
+
+def quote_to_htmlnode(text: str) -> HTMLNode:
+    lines = text.splitlines()
+    text_lines = []
+    for line in lines:
+        text_lines.append(line.strip("> "))
+
+    text_nodes = text_to_textnodes("\n".join(text_lines))
+    children_nodes = []
+    for node in text_nodes:
+        children_nodes.append(text_node_to_html_node(node))
+
+    return ParentNode("blockquote", children_nodes, None)
+
+
+def unordered_list_to_htmlnode(text: str) -> HTMLNode:
+    lines = text.splitlines()
+
+    ul_children_nodes = []
+    for line in lines:
+        line = line.strip("*- ")
+        text_nodes = text_to_textnodes(line)
+
+        li_children_nodes = []
+        for node in text_nodes:
+            li_children_nodes.append(text_node_to_html_node(node))
+
+        ul_children_nodes.append(ParentNode("li", li_children_nodes))
+
+    return ParentNode("ul", ul_children_nodes, None)
+
+
+def ordered_list_to_htmlnode(text: str) -> HTMLNode:
+    pass

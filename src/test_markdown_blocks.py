@@ -1,12 +1,12 @@
 import unittest
 
-from htmlnode import ParentNode
+from htmlnode import LeafNode, ParentNode
 from markdown_blocks import BlockType, block_to_block_type, block_to_htmlnode
 from textnode import text_node_to_html_node, text_to_textnodes
 
 
-class TestHeadings(unittest.TestCase):
-    def test_success(self):
+class TestBlockType(unittest.TestCase):
+    def test_heading(self):
         block = """## Heading 2"""
         block_type = block_to_block_type(block)
         target_block_type = BlockType.block_type_heading
@@ -19,9 +19,7 @@ class TestHeadings(unittest.TestCase):
         target_block_type = BlockType.block_type_heading
         self.assertIsNot(block_type, target_block_type)
 
-
-class TestCode(unittest.TestCase):
-    def test_success(self):
+    def test_code(self):
         block = """```sh
         Code block
         ### Heading 3
@@ -30,7 +28,7 @@ class TestCode(unittest.TestCase):
         target_block_type = BlockType.block_type_code
         self.assertIs(block_type, target_block_type)
 
-    def test_unbalanced_quote_symbols(self):
+    def test_unbalanced_code_symbols(self):
         block = """```sh
             Code block
             ### Heading 3
@@ -39,9 +37,7 @@ class TestCode(unittest.TestCase):
         target_block_type = BlockType.block_type_code
         self.assertIsNot(block_type, target_block_type)
 
-
-class TestQuoteUnorderedList(unittest.TestCase):
-    def test_success(self):
+    def test_quote(self):
         block = """> sh
         > Code block
         > ### Heading 3 """
@@ -53,14 +49,14 @@ class TestQuoteUnorderedList(unittest.TestCase):
         * Code block
         * ### Heading 3 """
         block_type = block_to_block_type(block)
-        target_block_type = BlockType.block_type_unordered_list
+        target_block_type = BlockType.block_type_u_list
         self.assertIs(block_type, target_block_type)
 
         block = """- sh
         - Code block
         - ### Heading 3 """
         block_type = block_to_block_type(block)
-        target_block_type = BlockType.block_type_unordered_list
+        target_block_type = BlockType.block_type_u_list
         self.assertIs(block_type, target_block_type)
 
     def test_mixed_symbols(self):
@@ -68,14 +64,14 @@ class TestQuoteUnorderedList(unittest.TestCase):
         > Code block
         * ### Heading 3 """
         block_type = block_to_block_type(block)
-        target_block_type = BlockType.block_type_unordered_list
+        target_block_type = BlockType.block_type_u_list
         self.assertIsNot(block_type, target_block_type)
 
         block = """- sh
         - Code block
         * ### Heading 3 """
         block_type = block_to_block_type(block)
-        target_block_type = BlockType.block_type_unordered_list
+        target_block_type = BlockType.block_type_u_list
         self.assertIsNot(block_type, target_block_type)
 
         block = """> sh
@@ -85,24 +81,22 @@ class TestQuoteUnorderedList(unittest.TestCase):
         target_block_type = BlockType.block_type_quote
         self.assertIsNot(block_type, target_block_type)
 
-
-class TestOrderedList(unittest.TestCase):
-    def test_success(self):
+    def test_ordered_list(self):
         block = """1. sh
         2. Code block
         3. ### Heading 3
         """
         block_type = block_to_block_type(block)
-        target_block_type = BlockType.block_type_ordered_list
+        target_block_type = BlockType.block_type_o_list
         self.assertIs(block_type, target_block_type)
 
-    def test_list_increments(self):
+    def test_ordered_list_increments(self):
         block = """1. sh
         2. Code block
         4. ### Heading 3
         """
         block_type = block_to_block_type(block)
-        target_block_type = BlockType.block_type_ordered_list
+        target_block_type = BlockType.block_type_o_list
         self.assertIsNot(block_type, target_block_type)
 
         block = """2. sh
@@ -110,7 +104,7 @@ class TestOrderedList(unittest.TestCase):
         4. ### Heading 3
         """
         block_type = block_to_block_type(block)
-        target_block_type = BlockType.block_type_ordered_list
+        target_block_type = BlockType.block_type_o_list
         self.assertIsNot(block_type, target_block_type)
 
 
@@ -126,7 +120,6 @@ class TestBlockToHTML(unittest.TestCase):
         ```sh
         A code block
         ```
-
         > Some quote
         > Second line quote
 
@@ -191,3 +184,49 @@ class TestBlockToHTML(unittest.TestCase):
         )
 
         self.assertEqual(html_node, target_html_node)
+
+    def test_quote_block(self):
+        value = """> Some quote
+        > Second line quote """
+        html_node = block_to_htmlnode(value)
+
+        target_value = "Some quote\nSecond line quote"
+        target_text_nodes = text_to_textnodes(target_value)
+
+        target_children_nodes = []
+        for node in target_text_nodes:
+            target_children_nodes.append(text_node_to_html_node(node))
+        target_html_node = ParentNode("blockquote", target_children_nodes)
+
+        self.assertEqual(html_node, target_html_node)
+
+    def test_unordered_list_block(self):
+        value = """- List item 1
+        - Second list item """
+        value2 = """* List item 1
+        * Second *list* item """
+
+        html_node = block_to_htmlnode(value)
+        html_node2 = block_to_htmlnode(value2)
+
+        target_children_nodes = [
+            ParentNode("li", [LeafNode(None, "List item 1", None)]),
+            ParentNode("li", [LeafNode(None, "Second list item", None)]),
+        ]
+        target_children_nodes2 = [
+            ParentNode("li", [LeafNode(None, "List item 1", None)]),
+            ParentNode(
+                "li",
+                [
+                    LeafNode(None, "Second ", None),
+                    LeafNode("i", "list", None),
+                    LeafNode(None, " item", None),
+                ],
+            ),
+        ]
+
+        target_html_node = ParentNode("ul", target_children_nodes)
+        target_html_node2 = ParentNode("ul", target_children_nodes2)
+
+        self.assertEqual(html_node, target_html_node)
+        self.assertEqual(html_node2, target_html_node2)
