@@ -1,12 +1,13 @@
-from textnode import text_to_textnodes
+from pathlib import Path
+import shutil
+from generate import recursive_copy
 
 
 def main():
-    new_nodes = text_to_textnodes(
-        "This is **text** with an *italic* word and a `code block` and an ![image](https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png) and a [link](https://boot.dev)"
-    )
-    print()
-    print(new_nodes)
+    public = Path("public")
+    shutil.rmtree(public, ignore_errors=True)
+    public.mkdir()
+    recursive_copy(Path("static"), public)
 
 
 if __name__ == "__main__":
