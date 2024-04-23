@@ -1,11 +1,13 @@
 import unittest
 
+from htmlnode import LeafNode
 from textnode import (
     TextNode,
     TextType,
     split_nodes_delimiter,
     split_nodes_images,
     split_nodes_links,
+    text_node_to_html_node,
     text_to_textnodes,
 )
 
@@ -222,6 +224,49 @@ class TestTextToTextNode(unittest.TestCase):
         ]
 
         self.assertEqual(new_nodes, target_nodes)
+
+
+class TestTextNodeToHTMLNode(unittest.TestCase):
+    def test_success(self):
+        value = "This is"
+        text_node = TextNode(value, TextType.text_type_text.value)
+        html_node = text_node_to_html_node(text_node)
+        target_html_node = LeafNode(None, value, None)
+        self.assertEqual(html_node, target_html_node)
+
+        value = "bold"
+        text_node = TextNode(value, TextType.text_type_bold.value)
+        html_node = text_node_to_html_node(text_node)
+        target_html_node = LeafNode("b", value, None)
+        self.assertEqual(html_node, target_html_node)
+
+        value = "italic"
+        text_node = TextNode(value, TextType.text_type_italic.value)
+        html_node = text_node_to_html_node(text_node)
+        target_html_node = LeafNode("i", value, None)
+        self.assertEqual(html_node, target_html_node)
+
+        value = "code"
+        text_node = TextNode(value, TextType.text_type_code.value)
+        html_node = text_node_to_html_node(text_node)
+        target_html_node = LeafNode("code", value, None)
+        self.assertEqual(html_node, target_html_node)
+
+        value = "image"
+        url = "https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png"
+        props = {"src": url, "alt": value}
+        text_node = TextNode(value, TextType.text_type_image.value, url)
+        html_node = text_node_to_html_node(text_node)
+        target_html_node = LeafNode("img", value, props=props)
+        self.assertEqual(html_node, target_html_node)
+
+        value = "link"
+        url = "https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png"
+        props = {"href": url}
+        text_node = TextNode(value, TextType.text_type_link.value, url)
+        html_node = text_node_to_html_node(text_node)
+        target_html_node = LeafNode("a", value, props=props)
+        self.assertEqual(html_node, target_html_node)
 
 
 if __name__ == "__main__":

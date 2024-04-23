@@ -43,6 +43,8 @@ def text_node_to_html_node(text_node: TextNode) -> LeafNode:
     value: str | None = text_node.text
     props: dict[str, str] | None = None
     match text_node.text_type:
+        case TextType.text_type_text.value:
+            pass
         case TextType.text_type_bold.value:
             tag = "b"
         case TextType.text_type_italic.value:
