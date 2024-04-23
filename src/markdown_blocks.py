@@ -1,6 +1,9 @@
 from enum import Enum
 import re
 
+from htmlnode import HTMLNode, ParentNode
+from textnode import text_node_to_html_node, text_to_textnodes
+
 
 class BlockType(Enum):
     block_type_paragraph = "paragraph"
@@ -54,3 +57,57 @@ def markdown_to_block(markdown: str) -> list[str]:
             output.append(block)
 
     return output
+
+
+def block_to_htmlnode(block: str) -> HTMLNode:
+    block_type = block_to_block_type(block)
+
+    if block_type == BlockType.block_type_heading:
+        return heading_to_htmlnode(block)
+    if block_type == BlockType.block_type_code:
+        return code_to_htmlnode(block)
+
+    return paragraph_to_htmlnode(block)
+
+
+def paragraph_to_htmlnode(paragraph: str) -> HTMLNode:
+    text_nodes = text_to_textnodes(paragraph)
+    children_nodes = []
+    for node in text_nodes:
+        children_nodes.append(text_node_to_html_node(node))
+
+    return ParentNode("p", children_nodes)
+
+
+def heading_to_htmlnode(heading: str) -> HTMLNode:
+    match = re.match(r"(#{1,6}) ", heading)
+    if not match:
+        raise Exception("invalid syntax - heading")
+
+    text = heading.lstrip(match.group(1) + " ")
+    text_nodes = text_to_textnodes(text)
+    children_nodes = []
+    for node in text_nodes:
+        children_nodes.append(text_node_to_html_node(node))
+
+    level = str.count(match.group(1), "#")
+
+    return ParentNode(f"h{level}", children_nodes, None)
+
+
+def code_to_htmlnode(code: str) -> HTMLNode:
+    lines = code.splitlines()
+    if len(lines) < 2:
+        raise Exception("invalid syntax - code")
+
+    lines = lines[1:-1]
+    text_lines = []
+    for line in lines:
+        text_lines.append(line.strip())
+
+    text_nodes = text_to_textnodes("\n".join(text_lines))
+    children_nodes = []
+    for node in text_nodes:
+        children_nodes.append(text_node_to_html_node(node))
+
+    return ParentNode("pre", [ParentNode("code", children_nodes, None)], None)
