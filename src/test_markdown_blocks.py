@@ -230,3 +230,20 @@ class TestBlockToHTML(unittest.TestCase):
 
         self.assertEqual(html_node, target_html_node)
         self.assertEqual(html_node2, target_html_node2)
+
+    def test_ordered_list_block(self):
+        value = """1. List item 1
+        2. Second list item 
+        3. Third list item """
+
+        html_node = block_to_htmlnode(value)
+
+        target_children_nodes = [
+            ParentNode("li", [LeafNode(None, "List item 1", None)]),
+            ParentNode("li", [LeafNode(None, "Second list item", None)]),
+            ParentNode("li", [LeafNode(None, "Third list item", None)]),
+        ]
+
+        target_html_node = ParentNode("ol", target_children_nodes)
+
+        self.assertEqual(html_node, target_html_node)

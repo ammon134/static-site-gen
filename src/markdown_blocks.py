@@ -152,4 +152,19 @@ def unordered_list_to_htmlnode(text: str) -> HTMLNode:
 
 
 def ordered_list_to_htmlnode(text: str) -> HTMLNode:
-    pass
+    lines = text.splitlines()
+
+    ul_children_nodes = []
+    for line in lines:
+        line = line.strip()
+        splits = re.split(r"^\d\. ", line, 1)
+        line = splits[-1]
+        text_nodes = text_to_textnodes(line)
+
+        li_children_nodes = []
+        for node in text_nodes:
+            li_children_nodes.append(text_node_to_html_node(node))
+
+        ul_children_nodes.append(ParentNode("li", li_children_nodes))
+
+    return ParentNode("ol", ul_children_nodes, None)
