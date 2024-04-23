@@ -109,26 +109,6 @@ class TestBlockType(unittest.TestCase):
 
 
 class TestBlockToHTML(unittest.TestCase):
-    def test_success(self):
-        markdown = """This is some simple text 
-        On another line
-
-        # Heading 1
-
-        ## Heading 2
-
-        ```sh
-        A code block
-        ```
-        > Some quote
-        > Second line quote
-
-        * Unordered item 1
-        * Unordered item 2
-
-        - Unordered item 3
-        - Unordered item 4"""
-        pass
 
     def test_paragraph(self):
         value = """This is some text
