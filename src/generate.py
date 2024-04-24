@@ -6,11 +6,12 @@ from markdown_blocks import markdown_to_html
 
 
 def prep_public_folder(path: Path) -> None:
+    print(f"Cleaning '{path}' folder...")
     shutil.rmtree(path, ignore_errors=True)
     path.mkdir(exist_ok=True, parents=True)
 
 
-def recursive_copy(src: Path, dst: Path) -> None:
+def copy_recursive(src: Path, dst: Path) -> None:
     if src.is_file():
         shutil.copy(src=src, dst=dst)
 
@@ -19,9 +20,11 @@ def recursive_copy(src: Path, dst: Path) -> None:
             if item.is_dir():
                 sub_dst_path = dst / item.relative_to(src)
                 sub_dst_path.mkdir(parents=True, exist_ok=True)
-                recursive_copy(src=item, dst=sub_dst_path)
+                print(f"Copying content of '{item}' to '{sub_dst_path}' ...")
+                copy_recursive(src=item, dst=sub_dst_path)
             else:
-                recursive_copy(src=item, dst=dst)
+                print(f"Copying '{item}' into '{dst}' ...")
+                copy_recursive(src=item, dst=dst)
 
 
 def extract_title(md: str) -> str:
@@ -32,7 +35,9 @@ def extract_title(md: str) -> str:
 
 
 def generate_page(src_path: Path, template_path: Path, dst_path: Path) -> None:
-    print(f"Generating page from {src_path} to {dst_path} using {template_path}...")
+    print(
+        f"Generating page from '{src_path}' to '{dst_path}' using '{template_path}'..."
+    )
 
     with open(src_path) as f:
         src = f.read()
@@ -54,3 +59,18 @@ def generate_page(src_path: Path, template_path: Path, dst_path: Path) -> None:
     dst_path.parent.mkdir(parents=True, exist_ok=True)
     with open(dst_path, "w") as f:
         f.write(output_html)
+
+
+def generate_page_recursive(
+    src_path: Path, template_path: Path, dst_path: Path
+) -> None:
+    if not src_path.is_dir():
+        raise Exception("source path is not a directory")
+
+    for item in src_path.iterdir():
+        if item.is_dir():
+            sub_dst_path = dst_path / item.relative_to(src_path)
+            sub_dst_path.mkdir(parents=True, exist_ok=True)
+            generate_page_recursive(item, template_path, sub_dst_path)
+        else:
+            generate_page(item, template_path, dst_path / (item.stem + ".html"))

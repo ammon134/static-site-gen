@@ -1,14 +1,19 @@
 from pathlib import Path
-from generate import generate_page, prep_public_folder, recursive_copy
+from generate import (
+    generate_page_recursive,
+    prep_public_folder,
+    copy_recursive,
+)
 
 
 def main():
     public = Path("public")
     prep_public_folder(public)
-    recursive_copy(Path("static"), public)
+    copy_recursive(Path("static"), public)
 
-    content = Path("content/index.md")
-    generate_page(content, Path("template.html"), public / "index.html")
+    content = Path("content")
+    template = Path("template.html")
+    generate_page_recursive(content, template, public)
 
 
 if __name__ == "__main__":
