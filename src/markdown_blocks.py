@@ -14,6 +14,46 @@ class BlockType(Enum):
     block_type_o_list = "ordered_list"
 
 
+def markdown_to_html(markdown: str) -> str:
+    blocks = markdown_to_blocks(markdown)
+    html_blocks = []
+    for block in blocks:
+        # print(block_to_htmlnode(block))
+        html_blocks.append(block_to_htmlnode(block).to_html())
+
+    return "".join(html_blocks)
+
+
+def markdown_to_blocks(markdown: str) -> list[str]:
+    output: list[str] = []
+    blocks = markdown.split("\n\n")
+    for block in blocks:
+        block = block.strip(" \n")
+        if block != "":
+            output.append(block)
+
+    return output
+
+
+def block_to_htmlnode(block: str) -> HTMLNode:
+    block_type = block_to_block_type(block)
+
+    if block_type == BlockType.block_type_heading:
+        return heading_to_htmlnode(block)
+    if block_type == BlockType.block_type_code:
+        return code_to_htmlnode(block)
+    if block_type == BlockType.block_type_quote:
+        return quote_to_htmlnode(block)
+    if block_type == BlockType.block_type_u_list:
+        return unordered_list_to_htmlnode(block)
+    if block_type == BlockType.block_type_o_list:
+        return ordered_list_to_htmlnode(block)
+    if block_type == BlockType.block_type_paragraph:
+        return paragraph_to_htmlnode(block)
+
+    raise Exception("invalid block type")
+
+
 def block_to_block_type(block: str) -> BlockType:
     lines = block.splitlines()
 
@@ -47,34 +87,6 @@ def block_to_block_type(block: str) -> BlockType:
             return BlockType.block_type_o_list
 
     return BlockType.block_type_paragraph
-
-
-def markdown_to_block(markdown: str) -> list[str]:
-    output: list[str] = []
-    blocks = markdown.split("\n\n")
-    for block in blocks:
-        block = block.strip(" \n")
-        if block != "":
-            output.append(block)
-
-    return output
-
-
-def block_to_htmlnode(block: str) -> HTMLNode:
-    block_type = block_to_block_type(block)
-
-    if block_type == BlockType.block_type_heading:
-        return heading_to_htmlnode(block)
-    if block_type == BlockType.block_type_code:
-        return code_to_htmlnode(block)
-    if block_type == BlockType.block_type_quote:
-        return quote_to_htmlnode(block)
-    if block_type == BlockType.block_type_u_list:
-        return unordered_list_to_htmlnode(block)
-    if block_type == BlockType.block_type_o_list:
-        return ordered_list_to_htmlnode(block)
-
-    return paragraph_to_htmlnode(block)
 
 
 def paragraph_to_htmlnode(text: str) -> HTMLNode:
@@ -129,7 +141,8 @@ def unordered_list_to_htmlnode(text: str) -> HTMLNode:
 
     ul_children_nodes = []
     for line in lines:
-        line = line.strip("*- ")
+        line = line.removeprefix("* ")
+        line = line.removeprefix("- ")
         li_children_nodes = text_to_children_nodes(line)
         ul_children_nodes.append(ParentNode("li", li_children_nodes))
 

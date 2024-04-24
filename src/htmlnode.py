@@ -31,7 +31,7 @@ class HTMLNode:
         raise NotImplementedError
 
     def props_to_html(self) -> str:
-        if not self.props:
+        if self.props is None:
             return ""
 
         html = ""
@@ -47,7 +47,7 @@ class LeafNode(HTMLNode):
         super().__init__(tag, value, None, props)
 
     def to_html(self) -> str:
-        if not self.value:
+        if self.value is None:
             raise ValueError
 
         if not self.tag:
@@ -66,7 +66,7 @@ class ParentNode(HTMLNode):
         super().__init__(tag, None, children, props)
 
     def to_html(self) -> str:
-        if not self.children or not self.tag:
+        if self.children is None or self.tag is None:
             raise ValueError
 
         value = ""

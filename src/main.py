@@ -1,13 +1,14 @@
 from pathlib import Path
-import shutil
-from generate import recursive_copy
+from generate import generate_page, prep_public_folder, recursive_copy
 
 
 def main():
     public = Path("public")
-    shutil.rmtree(public, ignore_errors=True)
-    public.mkdir()
+    prep_public_folder(public)
     recursive_copy(Path("static"), public)
+
+    content = Path("content/index.md")
+    generate_page(content, Path("template.html"), public / "index.html")
 
 
 if __name__ == "__main__":

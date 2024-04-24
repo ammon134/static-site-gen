@@ -42,18 +42,52 @@ class TestSplitInlineMarkdown(unittest.TestCase):
         self.assertEqual(new_nodes, target_nodes)
 
         node = TextNode(
-            "This is text with a `code block` with **a few** words",
+            "**This is** text with a `code block` with **a few** words",
             TextType.text_type_text.value,
         )
         new_nodes = split_nodes_delimiter([node], "**", TextType.text_type_bold.value)
         target_nodes = [
+            TextNode("This is", TextType.text_type_bold.value, None),
             TextNode(
-                "This is text with a `code block` with ",
+                " text with a `code block` with ",
                 TextType.text_type_text.value,
                 None,
             ),
             TextNode("a few", TextType.text_type_bold.value, None),
             TextNode(" words", TextType.text_type_text.value, None),
+        ]
+        self.assertEqual(new_nodes, target_nodes)
+
+        copy = """- **Diverse Cultures and Languages**: Each race, from the noble Elves to the sturdy Dwarves
+- **Geographical Realism**: The landscape of Middle-earth, from the Shire's pastoral hills to the shadowy depths of Mordor
+- **Historical Depth**: The legendarium is imbued with a sense of history, with ruins, artifacts"""
+        node = TextNode(
+            copy,
+            TextType.text_type_text.value,
+        )
+        new_nodes = split_nodes_delimiter([node], "**", TextType.text_type_bold.value)
+        target_nodes = [
+            TextNode("- ", TextType.text_type_text.value, None),
+            TextNode(
+                "Diverse Cultures and Languages", TextType.text_type_bold.value, None
+            ),
+            TextNode(
+                ": Each race, from the noble Elves to the sturdy Dwarves\n- ",
+                TextType.text_type_text.value,
+                None,
+            ),
+            TextNode("Geographical Realism", TextType.text_type_bold.value, None),
+            TextNode(
+                ": The landscape of Middle-earth, from the Shire's pastoral hills to the shadowy depths of Mordor\n- ",
+                TextType.text_type_text.value,
+                None,
+            ),
+            TextNode("Historical Depth", TextType.text_type_bold.value, None),
+            TextNode(
+                ": The legendarium is imbued with a sense of history, with ruins, artifacts",
+                TextType.text_type_text.value,
+                None,
+            ),
         ]
         self.assertEqual(new_nodes, target_nodes)
 
