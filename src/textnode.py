@@ -25,7 +25,7 @@ class TextNode:
         self.text_type = text_type
         self.url = url
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, TextNode):
             return False
         return (
@@ -90,13 +90,13 @@ def split_nodes_delimiter(
     if delimiter not in DelimiterType:
         raise Exception("invalid markdown syntax")
 
-    new_nodes = []
+    new_nodes: list[TextNode] = []
     for node in nodes:
         if node.text_type is not TextType.text_type_text.value:
             new_nodes.append(node)
             continue
 
-        temp = []
+        temp: list[TextNode] = []
         splits = node.text.split(delimiter)
         if len(splits) % 2 != 1:
             raise Exception("invalid markdown syntax")
@@ -113,7 +113,7 @@ def split_nodes_delimiter(
 
 
 def split_nodes_images(nodes: list[TextNode]) -> list[TextNode]:
-    new_nodes = []
+    new_nodes: list[TextNode] = []
     for node in nodes:
         if node.text_type is not TextType.text_type_text.value:
             new_nodes.append(node)
@@ -124,7 +124,7 @@ def split_nodes_images(nodes: list[TextNode]) -> list[TextNode]:
             new_nodes.append(node)
             continue
 
-        temp = []
+        temp: list[TextNode] = []
         node_text = node.text
         for tuple in image_tuples:
             delimiter = f"![{tuple[0]}]({tuple[1]})"
@@ -145,7 +145,7 @@ def split_nodes_images(nodes: list[TextNode]) -> list[TextNode]:
 
 
 def split_nodes_links(nodes: list[TextNode]) -> list[TextNode]:
-    new_nodes = []
+    new_nodes: list[TextNode] = []
     for node in nodes:
         if node.text_type is not TextType.text_type_text.value:
             new_nodes.append(node)
@@ -156,7 +156,7 @@ def split_nodes_links(nodes: list[TextNode]) -> list[TextNode]:
             new_nodes.append(node)
             continue
 
-        temp = []
+        temp: list[TextNode] = []
         node_text = node.text
         for tuple in link_tuples:
             delimiter = f"[{tuple[0]}]({tuple[1]})"

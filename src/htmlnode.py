@@ -17,7 +17,7 @@ class HTMLNode:
     def __repr__(self) -> str:
         return f"tag: {self.tag}, value: {self.value}, children: {self.children}, props: {self.props}"
 
-    def __eq__(self, other: "HTMLNode") -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, HTMLNode):
             return False
         return (

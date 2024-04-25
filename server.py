@@ -1,6 +1,7 @@
 import os
 import argparse
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from typing import Type
 
 
 class CORSHTTPRequestHandler(SimpleHTTPRequestHandler):
@@ -16,10 +17,10 @@ class CORSHTTPRequestHandler(SimpleHTTPRequestHandler):
 
 
 def run(
-    server_class=HTTPServer,
-    handler_class=CORSHTTPRequestHandler,
-    port=8000,
-    directory=None,
+    server_class: Type[HTTPServer] = HTTPServer,
+    handler_class: Type[SimpleHTTPRequestHandler] = CORSHTTPRequestHandler,
+    port: int = 8000,
+    directory: str | None = None,
 ):
     if directory:  # Change the current working directory if directory is specified
         os.chdir(directory)
